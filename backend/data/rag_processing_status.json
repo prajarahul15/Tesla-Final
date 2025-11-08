@@ -1,0 +1,106 @@
+{
+  "processed_files": [
+    {
+      "filename": "10K Report 2020.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:13:19.043429",
+      "chunks_count": 666,
+      "pages_count": 130
+    },
+    {
+      "filename": "10K Report 2021.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:14:07.437840",
+      "chunks_count": 584,
+      "pages_count": 120
+    },
+    {
+      "filename": "10K Report 2022.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:14:53.986033",
+      "chunks_count": 534,
+      "pages_count": 115
+    },
+    {
+      "filename": "10K Report 2023.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:15:36.236006",
+      "chunks_count": 514,
+      "pages_count": 129
+    },
+    {
+      "filename": "10K Report 2024.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:16:15.356463",
+      "chunks_count": 499,
+      "pages_count": 116
+    },
+    {
+      "filename": "2020-tesla-impact-report.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:16:26.624566",
+      "chunks_count": 237,
+      "pages_count": 94
+    },
+    {
+      "filename": "2021-tesla-impact-report.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:16:41.262075",
+      "chunks_count": 316,
+      "pages_count": 144
+    },
+    {
+      "filename": "2022-tesla-impact-report.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:18:11.516235",
+      "chunks_count": 297,
+      "pages_count": 224
+    },
+    {
+      "filename": "2023-tesla-impact-report.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:19:22.870833",
+      "chunks_count": 263,
+      "pages_count": 160
+    },
+    {
+      "filename": "2024-extended-version-tesla-impact-report.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:21:06.530238",
+      "chunks_count": 58,
+      "pages_count": 210
+    },
+    {
+      "filename": "NASDAQ_TSLA_2024.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:21:29.126258",
+      "chunks_count": 580,
+      "pages_count": 144
+    },
+    {
+      "filename": "Tesla Annual reports 2021.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:21:56.950983",
+      "chunks_count": 653,
+      "pages_count": 128
+    },
+    {
+      "filename": "tesla Annual Reports 2022.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:22:15.752397",
+      "chunks_count": 782,
+      "pages_count": 184
+    },
+    {
+      "filename": "Tesla Annual Reports 2023.pdf",
+      "status": "completed",
+      "processed_date": "2025-11-03T13:23:20.930693",
+      "chunks_count": 2404,
+      "pages_count": 562
+    }
+  ],
+  "last_scan_date": "2025-11-03T13:23:20.930707",
+  "total_processed": 14,
+  "total_failed": 0,
+  "total_pending": 0
+}

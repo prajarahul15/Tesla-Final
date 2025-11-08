@@ -1,0 +1,489 @@
+/* Tesla Font Utilities */
+/* This file provides utility classes for consistent Tesla typography */
+
+/* Tesla Font Family Classes */
+.font-tesla {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+}
+
+.font-tesla-sans {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+}
+
+.font-tesla-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Tesla Typography Scale */
+.tesla-text-xs {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 400;
+}
+
+.tesla-text-sm {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+}
+
+.tesla-text-base {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+
+.tesla-text-lg {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+}
+
+.tesla-text-xl {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 500;
+}
+
+.tesla-text-2xl {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.tesla-text-3xl {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.tesla-text-4xl {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.tesla-text-5xl {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* Tesla Font Weights */
+.tesla-font-light {
+  font-weight: 300;
+}
+
+.tesla-font-normal {
+  font-weight: 400;
+}
+
+.tesla-font-medium {
+  font-weight: 500;
+}
+
+.tesla-font-semibold {
+  font-weight: 600;
+}
+
+.tesla-font-bold {
+  font-weight: 700;
+}
+
+.tesla-font-extrabold {
+  font-weight: 800;
+}
+
+/* Tesla Component Styles */
+.tesla-card-title {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #111827;
+}
+
+.tesla-card-subtitle {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.tesla-button-text {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.tesla-input-text {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.tesla-table-header {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.tesla-table-cell {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+.tesla-metric-value {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.tesla-metric-label {
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Tesla Brand Colors - Complete Palette */
+.tesla-red {
+  color: #e31e24;
+}
+
+.tesla-red-bg {
+  background-color: #e31e24;
+}
+
+.tesla-red-border {
+  border-color: #e31e24;
+}
+
+.tesla-black {
+  color: #000000;
+}
+
+.tesla-black-bg {
+  background-color: #000000;
+}
+
+.tesla-black-border {
+  border-color: #000000;
+}
+
+.tesla-white {
+  color: #ffffff;
+}
+
+.tesla-white-bg {
+  background-color: #ffffff;
+}
+
+.tesla-white-border {
+  border-color: #ffffff;
+}
+
+.tesla-gray {
+  color: #5c5e62;
+}
+
+.tesla-gray-bg {
+  background-color: #5c5e62;
+}
+
+.tesla-gray-border {
+  border-color: #5c5e62;
+}
+
+.tesla-gray-light {
+  color: #f4f4f4;
+}
+
+.tesla-gray-light-bg {
+  background-color: #f4f4f4;
+}
+
+.tesla-gray-dark {
+  color: #3a3a3a;
+}
+
+.tesla-gray-dark-bg {
+  background-color: #3a3a3a;
+}
+
+.tesla-silver {
+  color: #c0c0c0;
+}
+
+.tesla-silver-bg {
+  background-color: #c0c0c0;
+}
+
+.tesla-blue {
+  color: #007acc;
+}
+
+.tesla-blue-bg {
+  background-color: #007acc;
+}
+
+.tesla-blue-border {
+  border-color: #007acc;
+}
+
+.tesla-green {
+  color: #00d4aa;
+}
+
+.tesla-green-bg {
+  background-color: #00d4aa;
+}
+
+.tesla-green-border {
+  border-color: #00d4aa;
+}
+
+.tesla-orange {
+  color: #ff6b35;
+}
+
+.tesla-orange-bg {
+  background-color: #ff6b35;
+}
+
+.tesla-orange-border {
+  border-color: #ff6b35;
+}
+
+/* Tesla Component Styles */
+.tesla-card {
+  background-color: #ffffff;
+  border: 1px solid #f4f4f4;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tesla-card-dark {
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #ffffff;
+}
+
+.tesla-button-primary {
+  background-color: #e31e24;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tesla-button-primary:hover {
+  background-color: #c41e3a;
+  transform: translateY(-1px);
+}
+
+.tesla-button-secondary {
+  background-color: #5c5e62;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tesla-button-secondary:hover {
+  background-color: #4a4c50;
+  transform: translateY(-1px);
+}
+
+.tesla-input {
+  border: 1px solid #c0c0c0;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-family: 'Inter', 'Gotham', system-ui, sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.tesla-input:focus {
+  outline: none;
+  border-color: #e31e24;
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+}
+
+.tesla-navbar {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 16px 24px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.tesla-sidebar {
+  background-color: #f4f4f4;
+  border-right: 1px solid #c0c0c0;
+  padding: 24px;
+}
+
+.tesla-sidebar-dark {
+  background-color: #1a1a1a;
+  border-right: 1px solid #3a3a3a;
+  color: #ffffff;
+}
+
+.tesla-metric-card {
+  background-color: #ffffff;
+  border: 1px solid #f4f4f4;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tesla-metric-card-dark {
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #ffffff;
+}
+
+.tesla-chart-container {
+  background-color: #ffffff;
+  border: 1px solid #f4f4f4;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tesla-chart-container-dark {
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #ffffff;
+}
+
+.tesla-table {
+  background-color: #ffffff;
+  border: 1px solid #f4f4f4;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tesla-table-dark {
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  color: #ffffff;
+}
+
+.tesla-table th {
+  background-color: #f4f4f4;
+  color: #000000;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #c0c0c0;
+}
+
+.tesla-table-dark th {
+  background-color: #3a3a3a;
+  color: #ffffff;
+  border-bottom: 1px solid #5c5e62;
+}
+
+.tesla-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.tesla-table-dark td {
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.tesla-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.tesla-table-dark tr:hover {
+  background-color: #2a2a2a;
+}
+
+.tesla-alert-success {
+  background-color: #f0fdf4;
+  border: 1px solid #00d4aa;
+  color: #166534;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.tesla-alert-warning {
+  background-color: #fffbeb;
+  border: 1px solid #ff6b35;
+  color: #92400e;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.tesla-alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #e31e24;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.tesla-alert-info {
+  background-color: #eff6ff;
+  border: 1px solid #007acc;
+  color: #1e40af;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+/* Responsive Tesla Typography */
+@media (max-width: 768px) {
+  .tesla-text-4xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  
+  .tesla-text-5xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+  
+  .tesla-card-title {
+    font-size: 1.125rem;
+  }
+  
+  .tesla-metric-value {
+    font-size: 1.25rem;
+  }
+}

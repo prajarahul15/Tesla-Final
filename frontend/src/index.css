@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+@import './tesla-fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Inter', 'Gotham', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+        "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: 'JetBrains Mono', 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+        monospace;
+}
+
+
+
+@layer base {
+  :root {
+        /* Tesla Light Theme */
+        --background: 0 0% 100%; /* Tesla White */
+        --foreground: 0 0% 0%; /* Tesla Black */
+        --card: 0 0% 100%; /* Tesla White */
+        --card-foreground: 0 0% 0%; /* Tesla Black */
+        --popover: 0 0% 100%; /* Tesla White */
+        --popover-foreground: 0 0% 0%; /* Tesla Black */
+        --primary: 0 84% 50%; /* Tesla Red */
+        --primary-foreground: 0 0% 100%; /* Tesla White */
+        --secondary: 0 0% 36%; /* Tesla Gray */
+        --secondary-foreground: 0 0% 100%; /* Tesla White */
+        --muted: 0 0% 96%; /* Tesla Gray Light */
+        --muted-foreground: 0 0% 36%; /* Tesla Gray */
+        --accent: 200 100% 40%; /* Tesla Blue */
+        --accent-foreground: 0 0% 100%; /* Tesla White */
+        --destructive: 12 100% 60%; /* Tesla Orange */
+        --destructive-foreground: 0 0% 100%; /* Tesla White */
+        --border: 0 0% 90%; /* Light Gray */
+        --input: 0 0% 90%; /* Light Gray */
+        --ring: 0 84% 50%; /* Tesla Red */
+        --chart-1: 0 84% 50%; /* Tesla Red */
+        --chart-2: 170 100% 42%; /* Tesla Green */
+        --chart-3: 200 100% 40%; /* Tesla Blue */
+        --chart-4: 12 100% 60%; /* Tesla Orange */
+        --chart-5: 0 0% 36%; /* Tesla Gray */
+        --radius: 0.5rem;
+    }
+  .dark {
+        /* Tesla Dark Theme */
+        --background: 0 0% 0%; /* Tesla Black */
+        --foreground: 0 0% 100%; /* Tesla White */
+        --card: 0 0% 5%; /* Dark Gray */
+        --card-foreground: 0 0% 100%; /* Tesla White */
+        --popover: 0 0% 5%; /* Dark Gray */
+        --popover-foreground: 0 0% 100%; /* Tesla White */
+        --primary: 0 84% 50%; /* Tesla Red */
+        --primary-foreground: 0 0% 100%; /* Tesla White */
+        --secondary: 0 0% 20%; /* Dark Gray */
+        --secondary-foreground: 0 0% 100%; /* Tesla White */
+        --muted: 0 0% 15%; /* Dark Gray */
+        --muted-foreground: 0 0% 65%; /* Light Gray */
+        --accent: 200 100% 40%; /* Tesla Blue */
+        --accent-foreground: 0 0% 100%; /* Tesla White */
+        --destructive: 12 100% 60%; /* Tesla Orange */
+        --destructive-foreground: 0 0% 100%; /* Tesla White */
+        --border: 0 0% 20%; /* Dark Gray */
+        --input: 0 0% 20%; /* Dark Gray */
+        --ring: 0 84% 50%; /* Tesla Red */
+        --chart-1: 0 84% 50%; /* Tesla Red */
+        --chart-2: 170 100% 42%; /* Tesla Green */
+        --chart-3: 200 100% 40%; /* Tesla Blue */
+        --chart-4: 12 100% 60%; /* Tesla Orange */
+        --chart-5: 0 0% 65%; /* Light Gray */
+    }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+}
+
+/* Hide "Made with Emergent" watermark and other extension badges */
+[data-emergent],
+[class*="emergent"],
+[id*="emergent"],
+div[style*="position: fixed"][style*="z-index"],
+iframe[src*="emergent"],
+.emergent-badge,
+.emergent-watermark {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
