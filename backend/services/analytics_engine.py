@@ -23,31 +23,15 @@ class AnalyticsEngine:
     def load_data(self):
         """Load and prepare all data files"""
         try:
-            from pathlib import Path
-            # Use relative paths for deployment compatibility
-            backend_dir = Path(__file__).parent.parent
-            data_dir = backend_dir / "data"
-            
             # Load sample data with basic columns
-            sample_data_path = data_dir / "Sample_data_N.csv"
-            if not sample_data_path.exists():
-                # Fallback to alternative filename if exists
-                alt_path = data_dir / "Tesla_Monthly_Model_Production_Delivery_2018_2025.csv"
-                sample_data_path = alt_path if alt_path.exists() else sample_data_path
-            
-            self.sample_data = pd.read_csv(sample_data_path)
+            self.sample_data = pd.read_csv(r"E:\TS\Teslamodel1.2-main\Teslamodel_Main\backend\data\Sample_data_N.csv")
             self.sample_data['DATE'] = pd.to_datetime(self.sample_data['DATE'], format='%d-%m-%Y')
             self.sample_data = self.sample_data.sort_values(['Lineup', 'DATE'])
             
             # Load multivariate parameters with economic variables
-            mv_params_path = data_dir / "MV Parameter.xlsx"
-            if mv_params_path.exists():
-                self.mv_parameters = pd.read_excel(mv_params_path)
-                self.mv_parameters['DATE'] = pd.to_datetime(self.mv_parameters['DATE'])
-                self.mv_parameters = self.mv_parameters.sort_values(['Lineup', 'DATE'])
-            else:
-                # If MV Parameter.xlsx doesn't exist, use sample_data as fallback
-                self.mv_parameters = self.sample_data.copy()
+            self.mv_parameters = pd.read_excel(r"E:\TS\Teslamodel1.2-main\Teslamodel_Main\backend\data\MV Parameter.xlsx")
+            self.mv_parameters['DATE'] = pd.to_datetime(self.mv_parameters['DATE'])
+            self.mv_parameters = self.mv_parameters.sort_values(['Lineup', 'DATE'])
             
             return True
         except Exception as e:

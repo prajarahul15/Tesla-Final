@@ -3,9 +3,6 @@ import axios from 'axios';
 import ChatWindow from './ChatWindow';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
-import CitationDisplay from './CitationDisplay';
-import TemporalContextBadge from './TemporalContextBadge';
-import { parseCitationsFromText } from '../utils/citationParser';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -135,26 +132,6 @@ I can help you with:
           JSON.stringify(result, null, 2) + '\n```';
       }
 
-      // Phase 3: Extract citations and temporal context from response
-      const citations = result.citations || null;
-      const temporalContext = result.temporal_context || null;
-      
-      // Fallback: Parse citations from text if not provided by backend
-      let parsedCitations = null;
-      if (!citations && responseContent) {
-        const parsed = parseCitationsFromText(responseContent);
-        if (parsed.length > 0) {
-          parsedCitations = {
-            total_citations: parsed.length,
-            verified_count: 0,
-            verified_citations: parsed.map((cit, idx) => ({
-              ...cit,
-              index: idx + 1
-            }))
-          };
-        }
-      }
-
       const assistantMessage = {
         id: Date.now() + 1,
         type: 'assistant',
@@ -162,9 +139,7 @@ I can help you with:
         timestamp: new Date().toISOString(),
         metadata: {
           agents_used: response.data.agents_used,
-          tasks_executed: response.data.tasks_executed,
-          citations: citations || parsedCitations,
-          temporalContext: temporalContext
+          tasks_executed: response.data.tasks_executed
         }
       };
 
@@ -279,27 +254,10 @@ I can help you with:
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
-              <div key={message.id} className="space-y-2">
-                <MessageBubble
-                  message={message}
-                />
-                {/* Phase 3: Display temporal context badge */}
-                {message.metadata?.temporalContext && (
-                  <div className="ml-14">
-                    <TemporalContextBadge 
-                      temporalContext={message.metadata.temporalContext}
-                    />
-                  </div>
-                )}
-                {/* Phase 3: Display citations */}
-                {message.metadata?.citations && (
-                  <div className="ml-14">
-                    <CitationDisplay 
-                      citationData={message.metadata.citations}
-                    />
-                  </div>
-                )}
-              </div>
+              <MessageBubble
+                key={message.id}
+                message={message}
+              />
             ))}
             {/* Show loading indicator separately after user message */}
             {isLoading && (

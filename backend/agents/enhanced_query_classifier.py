@@ -132,17 +132,6 @@ class EnhancedQueryClassifier:
                 "financial metrics", "kpis", "performance metrics", "roi", "roe",
                 "roa", "roic", "debt to equity", "current ratio", "quick ratio",
                 "inventory turnover", "receivables turnover", "payables turnover"
-            ],
-            "document_analysis": [
-                "summarize", "summary", "summarise", "report summary", "document summary",
-                "10-k", "10k", "10-k report", "10k report", "sec filing", "sec filings",
-                "annual report", "impact report", "tesla impact report", "esg report",
-                "financial report", "quarterly report", "10-q", "10-q report",
-                "document analysis", "report analysis", "analyze report", "summarize report",
-                "key insights", "insights from", "insights in", "report insights",
-                "document insights", "extract insights", "generate insights",
-                "report highlights", "document highlights", "main findings",
-                "report findings", "document findings", "tesla report", "tesla document"
             ]
         }
         

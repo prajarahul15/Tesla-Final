@@ -73,15 +73,6 @@ class EnhancedAgentOrchestrator:
         self.task_executor = TaskExecutor(self)  # Pass self for agent access
         self.enable_task_decomposition = True  # Can be toggled
         
-        # RAG Service (NEW!)
-        try:
-            from services.rag import RAGService
-            self.rag_service = RAGService()
-            logger.info("✅ RAG Service initialized")
-        except Exception as e:
-            logger.warning(f"⚠️ RAG Service not available: {e}")
-            self.rag_service = None
-        
         # OpenAI client for response generation
         try:
             from openai import AsyncOpenAI
@@ -127,17 +118,8 @@ class EnhancedAgentOrchestrator:
             # 1. Classify the query
             classification = await self.query_classifier.classify_query(query)
             
-            # 2. Check for document summarization queries FIRST (before routing)
-            # These should go to financial modeling handler for RAG access
-            query_lower_for_doc_check = query.lower()
-            is_doc_summary_query = any(word in query_lower_for_doc_check for word in ['summarize', 'summary', 'summarise']) and any(word in query_lower_for_doc_check for word in ['report', 'document', 'impact report', '10-k', '10k', 'annual report'])
-            
-            if is_doc_summary_query:
-                logger.info(f"📄 Document summarization query detected - routing to financial modeling handler")
-                # Override classification to ensure it goes to financial modeling
-                result = await self.handle_financial_modeling_query(query, classification, context or {})
             # 2. Route to appropriate handler based on classification
-            elif classification.query_type == QueryType.MARKET_INTELLIGENCE:
+            if classification.query_type == QueryType.MARKET_INTELLIGENCE:
                 result = await self.handle_market_intelligence_query(query, classification, context or {})
             elif classification.query_type == QueryType.FINANCIAL_MODELING:
                 result = await self.handle_financial_modeling_query(query, classification, context or {})
@@ -263,144 +245,43 @@ class EnhancedAgentOrchestrator:
             if self.openai_client:
                 logger.info("Using OpenAI for financial modeling analysis")
                 
-                # Check if this is a user-uploaded document query (FRA)
-                is_user_document_query = context.get("user_document", False)
+                # Build context from available APIs
+                financial_context = await self._get_financial_context()
+                logger.info(f"Financial context keys: {list(financial_context.keys())}")
                 
-                # For user document queries, ONLY use the document content (no Tesla KB or financial model data)
-                if is_user_document_query:
-                    logger.info("📄 User document query detected - using ONLY uploaded document, no Tesla KB or financial model data")
-                    financial_context = {
-                        "user_document_only": True,
-                        "file_id": context.get("file_id"),
-                        "user_id": context.get("user_id")
-                    }
-                    # Note: Document chunks are already in the query text from FRA endpoint
-                    query_lower = query.lower()  # Still need this for system prompt check later
-                    is_document_summary_query = False  # Not applicable for user documents
-                else:
-                    # Check for document summarization queries FIRST
-                    query_lower = query.lower()
-                    is_document_summary_query = any(word in query_lower for word in ['summarize', 'summary', 'summarise']) and any(word in query_lower for word in ['report', 'document', 'impact report', '10-k', '10k', 'annual report'])
-                    
-                    # Build context from available APIs
-                    # For document summarization queries, we still get context but will prioritize RAG documents
-                    financial_context = await self._get_financial_context(query=query)
-                    logger.info(f"Financial context keys: {list(financial_context.keys())}")
+                # Create prompt with financial context
+                prompt = self._build_financial_prompt(query, financial_context, classification)
                 
-                # Phase 3: Detect temporal reasoning (skip for user documents)
-                if not is_user_document_query and self.rag_service:
-                    temporal_info = self.rag_service.temporal_reasoning.detect_temporal_query(query)
-                    if temporal_info.get("has_temporal"):
-                        financial_context['temporal_info'] = temporal_info
-                        logger.info(f"🕐 Temporal query detected: {temporal_info['type']}, years: {temporal_info.get('years', [])}")
+                # Check for cross-statement simulation queries
+                query_lower = query.lower()
+                if any(word in query_lower for word in ['cross-statement', 'cross statement', 'integrated', 'all statements', 'balance sheet impact', 'cash flow impact']):
+                    logger.info(f"🔗 Query contains cross-statement keywords - fetching cross-statement data")
+                    try:
+                        financial_context['cross_statement_data'] = await self._get_cross_statement_context(query)
+                        logger.info("✅ Cross-statement data added successfully")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to fetch cross-statement data: {e}", exc_info=True)
                 
-                # For document summarization queries, mark it so prompt builder can prioritize RAG documents
-                if not is_user_document_query and is_document_summary_query:
-                    financial_context['_is_document_summary'] = True
-                if not is_user_document_query and is_document_summary_query:
-                    logger.info(f"📄 Detected document summarization query - retrieving more chunks")
-                    # Retrieve more chunks for comprehensive summarization (increase top_k)
-                    if self.rag_service and 'rag_documents' in financial_context:
-                        # Get source filename from query or retrieved documents
-                        retrieved_docs = financial_context['rag_documents']
-                        if retrieved_docs:
-                            # Try to find matching document name in query
-                            query_words = query_lower.split()
-                            for doc in retrieved_docs[:3]:  # Check top 3
-                                source_name = doc.get('metadata', {}).get('source', '').lower()
-                                if any(word in source_name for word in query_words):
-                                    logger.info(f"📚 Found matching document: {source_name} - retrieving more chunks")
-                                    # Retrieve more chunks from this specific document
-                                    enhanced_query = f"{query} {source_name}"
-                                    additional_docs = self.rag_service.retrieve_documents(
-                                        query=enhanced_query,
-                                        top_k=15  # Get more chunks for summarization
-                                    )
-                                    if additional_docs:
-                                        # Filter to prioritize the matching document
-                                        matching_docs = [d for d in additional_docs if source_name in d.get('metadata', {}).get('source', '').lower()]
-                                        if matching_docs:
-                                            financial_context['rag_documents'] = matching_docs[:10] + retrieved_docs[:5]
-                                            logger.info(f"✅ Enhanced RAG retrieval: {len(financial_context['rag_documents'])} total chunks")
+                # Check for scenario comparison queries
+                if any(word in query_lower for word in ['compare scenarios', 'best vs base vs worst', 'scenario comparison', 'compare best', 'compare base', 'compare worst']):
+                    logger.info(f"📊 Query contains scenario comparison keywords - fetching comparison data")
+                    try:
+                        financial_context['scenario_comparison'] = await self._get_scenario_comparison_context()
+                        logger.info("✅ Scenario comparison data added successfully")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to fetch scenario comparison data: {e}", exc_info=True)
                 
-                # Build prompt based on query type
-                is_user_document_query = financial_context.get('user_document_only', False)
+                # For simulation queries, pre-calculate and inject results
+                if any(word in query.lower() for word in ['simulate', 'growth', 'increase', 'impact']):
+                    logger.info(f"🎯 Query contains simulation keywords - calling _add_simulation_calculations")
+                    try:
+                        prompt = self._add_simulation_calculations(prompt, query, financial_context)
+                        logger.info("✅ Simulation calculations added successfully")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to add simulation calculations: {e}", exc_info=True)
                 
-                if is_user_document_query:
-                    # For user document queries, use isolated prompt (no Tesla KB or financial model data)
-                    prompt = self._build_user_document_prompt(query=query)
-                    logger.info("📄 Using user document-only prompt (isolated from Tesla KB)")
-                else:
-                    # For regular queries, use full financial prompt
-                    is_document_summary_query = financial_context.get('_is_document_summary', False)
-                    prompt = self._build_financial_prompt(
-                        query=query,
-                        financial_context=financial_context,
-                        classification=classification,
-                        is_document_summary_query=is_document_summary_query
-                    )
-                
-                # Skip these for user document queries (they would pull Tesla KB or financial model data)
-                if not is_user_document_query:
-                    # Check for cross-statement simulation queries
-                    if any(word in query_lower for word in ['cross-statement', 'cross statement', 'integrated', 'all statements', 'balance sheet impact', 'cash flow impact']):
-                        logger.info(f"🔗 Query contains cross-statement keywords - fetching cross-statement data")
-                        try:
-                            financial_context['cross_statement_data'] = await self._get_cross_statement_context(query)
-                            logger.info("✅ Cross-statement data added successfully")
-                        except Exception as e:
-                            logger.error(f"❌ Failed to fetch cross-statement data: {e}", exc_info=True)
-                    
-                    # Check for scenario comparison queries
-                    if any(word in query_lower for word in ['compare scenarios', 'best vs base vs worst', 'scenario comparison', 'compare best', 'compare base', 'compare worst']):
-                        logger.info(f"📊 Query contains scenario comparison keywords - fetching comparison data")
-                        try:
-                            financial_context['scenario_comparison'] = await self._get_scenario_comparison_context()
-                            logger.info("✅ Scenario comparison data added successfully")
-                        except Exception as e:
-                            logger.error(f"❌ Failed to fetch scenario comparison data: {e}", exc_info=True)
-                    
-                    # For simulation queries, pre-calculate and inject results
-                    if any(word in query.lower() for word in ['simulate', 'growth', 'increase', 'impact']):
-                        logger.info(f"🎯 Query contains simulation keywords - calling _add_simulation_calculations")
-                        try:
-                            prompt = self._add_simulation_calculations(prompt, query, financial_context)
-                            logger.info("✅ Simulation calculations added successfully")
-                        except Exception as e:
-                            logger.error(f"❌ Failed to add simulation calculations: {e}", exc_info=True)
-                
-                # Enhanced system prompt - different for user documents vs regular queries
-                if is_user_document_query:
-                    system_prompt = """You are a Financial Document Analyst. Analyze user-uploaded documents ONLY.
-
-CRITICAL INSTRUCTIONS:
-1. You MUST base your response ONLY on the document content provided in the user's query
-2. DO NOT use any Tesla Knowledge Base documents, financial model forecasts, or external data
-3. DO NOT reference Tesla's 10-K reports, Impact Reports, or any pre-existing documents
-4. DO NOT use vehicle forecast data, financial statements, or any model projections
-5. If the document doesn't contain the information, explicitly state: "This information is not available in the uploaded document"
-6. Answer based SOLELY on what is provided in the document excerpts
-
-REQUIRED FORMAT:
-
-**Executive Summary**
-[2-3 complete sentences based ONLY on the uploaded document]
-
-**Financial Impact** (if applicable)
-[Use only data from the uploaded document]
-
-**Key Insights**
-• [Insight 1 - from document only]
-• [Insight 2 - from document only]
-• [Insight 3 - from document only]
-
-**Recommendations**
-• [Recommendation 1 - based on document content]
-• [Recommendation 2 - based on document content]
-
-Keep response under 600 words."""
-                else:
-                    system_prompt = """You are Tesla's Financial Analyst. Provide a COMPLETE, CONCISE response.
+                # Enhanced system prompt for crisp, accurate financial analysis
+                system_prompt = """You are Tesla's Financial Analyst. Provide a COMPLETE, CONCISE response.
 
 CRITICAL INSTRUCTION:
 If the prompt contains "PRE-CALCULATED SIMULATION RESULTS", you MUST:
@@ -449,36 +330,16 @@ Keep under 600 words total."""
                     logger.error("GPT-4o returned empty response!")
                     raise ValueError("AI model returned empty response")
                 
-                # Phase 3: Extract and verify citations
-                citations_result = {}
-                if self.rag_service and 'rag_documents' in financial_context:
-                    retrieved_docs = financial_context.get('rag_documents', [])
-                    if answer:  # Ensure answer is not None or empty
-                        citations_result = self.rag_service.extract_and_verify_citations(
-                            str(answer),  # Ensure it's a string
-                            retrieved_docs
-                        )
-                        logger.info(f"📝 Citation extraction: {citations_result.get('verified_count', 0)} verified")
-                    else:
-                        logger.warning("⚠️ Empty answer, skipping citation extraction")
-                
                 # Parse response into structured format
-                result = {
+                return {
                     "executive_summary": answer,
                     "key_insights": self._extract_insights_from_response(answer),
                     "recommendations": self._extract_recommendations_from_response(answer),
                     "agents_used": ["OpenAI Financial Analyst"],
                     "tasks_executed": ["financial_analysis_with_llm"],
                     "data_sources": ["Tesla Financial API", "Vehicle Data", "Financial Statements"]
+                    # Removed financial_context - it's too large for response serialization
                 }
-                
-                # Add Phase 3 features to response
-                if citations_result:
-                    result["citations"] = citations_result
-                if 'temporal_info' in financial_context:
-                    result["temporal_context"] = financial_context['temporal_info']
-                
-                return result
             else:
                 # Fallback if OpenAI is not available
                 logger.warning("OpenAI not available for financial modeling")
@@ -990,13 +851,10 @@ Keep under 600 words total."""
                 "error": f"Synthesis error (using fallback): {str(e)}"
             }
     
-    async def _get_financial_context(self, query: str = "") -> Dict[str, Any]:
+    async def _get_financial_context(self) -> Dict[str, Any]:
         """
         Fetch financial context from available API endpoints
         This provides data for OpenAI to generate informed responses
-        
-        Args:
-            query: User query (optional, used for RAG retrieval)
         """
         context = {}
         
@@ -1074,19 +932,6 @@ Keep under 600 words total."""
                 
         except Exception as e:
             logger.error(f"Error fetching financial context: {str(e)}")
-        
-        # Retrieve relevant documents using RAG (NEW!)
-        if query and self.rag_service:
-            try:
-                rag_documents = self.rag_service.retrieve_documents(
-                    query=query,
-                    top_k=5
-                )
-                if rag_documents:
-                    context['rag_documents'] = rag_documents
-                    logger.info(f"📚 Retrieved {len(rag_documents)} relevant documents from RAG")
-            except Exception as e:
-                logger.warning(f"⚠️ Error retrieving RAG documents: {e}")
         
         return context
     
@@ -1194,78 +1039,17 @@ Keep under 600 words total."""
             "timestamp": datetime.now().isoformat()
         }
     
-    def _build_financial_prompt(self, query: str, financial_context: Dict[str, Any], classification, is_document_summary_query: bool = False) -> str:
+    def _build_financial_prompt(self, query: str, financial_context: Dict[str, Any], classification) -> str:
         """Build a comprehensive prompt for OpenAI with financial context"""
         
         prompt_parts = [
             f"User Question: {query}",
-            ""
+            "",
+            "Available Financial Data:"
         ]
         
-        # For document summarization queries, prioritize RAG documents and skip financial model data
-        if is_document_summary_query and 'rag_documents' in financial_context:
-            # Put RAG documents FIRST for document summarization queries
-            rag_docs = financial_context['rag_documents']
-            if rag_docs:
-                prompt_parts.extend([
-                    "=== PRIMARY DATA SOURCE: RELEVANT DOCUMENTS FROM TESLA KNOWLEDGE BASE ===",
-                    "CRITICAL: You MUST base your response ONLY on the document excerpts below.",
-                    "DO NOT use any financial model forecasts or projections - only use actual data from the documents.",
-                    "",
-                    "The following document excerpts contain the information you need:",
-                    ""
-                ])
-                
-                # For document summarization, show more chunks; otherwise limit to 5
-                chunk_limit = 15 if is_document_summary_query else 5
-                text_limit = 800 if is_document_summary_query else 500
-                
-                for i, doc in enumerate(rag_docs[:chunk_limit], 1):
-                    metadata = doc.get('metadata', {})
-                    source = metadata.get('source', 'Unknown')
-                    doc_type = metadata.get('document_type', 'Document')
-                    year = metadata.get('year', 'Unknown')
-                    chunk_text = doc.get('text', '')[:text_limit]  # Longer excerpts for summarization
-                    
-                    prompt_parts.extend([
-                        f"[Document {i}]",
-                        f"Source: {source}",
-                        f"Type: {doc_type} ({year})",
-                        f"Relevance Score: {1 - doc.get('distance', 1):.3f}" if 'distance' in doc else "",
-                        f"",
-                        f"Content Excerpt:",
-                        chunk_text,
-                        "...",
-                        ""
-                    ])
-                
-                # Special instructions for document summarization
-                prompt_parts.extend([
-                    "",
-                    "=== DOCUMENT SUMMARIZATION TASK ===",
-                    "The user has requested a summary of a SPECIFIC DOCUMENT (not financial model forecasts).",
-                    "",
-                    "CRITICAL INSTRUCTIONS:",
-                    "1. Base your response ONLY on the document excerpts provided above",
-                    "2. DO NOT use any financial model forecasts (2025, 2026 projections shown below are NOT relevant)",
-                    "3. Extract actual data, facts, and insights from the document excerpts",
-                    "4. Cite the source document: '[Document Type] ([Source filename])'",
-                    "5. If the document mentions specific years (e.g., 2024, 2023), use those years - NOT forecast years",
-                    "6. Provide a comprehensive executive summary of the document content",
-                    "7. Identify key insights, themes, and important information from the document",
-                    "8. Extract key metrics, goals, achievements, or data points mentioned in the document",
-                    "9. Organize insights by topic/section if the document has multiple sections",
-                    "10. Provide actionable insights or recommendations based on the document content",
-                    "",
-                    "IMPORTANT: The financial model data below (if any) is for reference only.",
-                    "For document summarization queries, prioritize document content over model forecasts.",
-                    "",
-                ])
-        else:
-            prompt_parts.append("Available Financial Data:")
-        
-        # Add vehicle forecast data if available (skip for document summaries)
-        if not is_document_summary_query and 'vehicle_forecasts_cached' in financial_context:
+        # Add vehicle forecast data if available
+        if 'vehicle_forecasts_cached' in financial_context:
             forecasts_data = financial_context['vehicle_forecasts_cached']
             forecast_list = forecasts_data.get('forecasts', [])
             agent_status = financial_context.get('forecast_agent_status', {})
@@ -1334,13 +1118,11 @@ Keep under 600 words total."""
             ])
         
         # Add financial statements - ONLY base case to reduce token usage
-        # SKIP for document summarization queries (they should use document content only)
-        if not is_document_summary_query:
-            scenarios = ['base']  # Only base case for concise responses
-            for scenario in scenarios:
-                key = f'financial_statements_{scenario}'
-                if key in financial_context:
-                    statements = financial_context[key]
+        scenarios = ['base']  # Only base case for concise responses
+        for scenario in scenarios:
+            key = f'financial_statements_{scenario}'
+            if key in financial_context:
+                statements = financial_context[key]
                 
                 # Income Statement
                 income_statements = statements.get('income_statements', [])
@@ -1535,68 +1317,10 @@ Keep under 600 words total."""
                     ""
                 ])
         
-        # Add RAG documents if available (for non-summarization queries only - summarization queries already handled above)
-        if not is_document_summary_query and 'rag_documents' in financial_context:
-            rag_docs = financial_context['rag_documents']
-            if rag_docs:
-                prompt_parts.extend([
-                    "",
-                    "=== RELEVANT DOCUMENTS FROM TESLA KNOWLEDGE BASE ===",
-                    "The following documents from Tesla's SEC filings, annual reports, and impact reports",
-                    "contain relevant information related to the user's question:",
-                    ""
-                ])
-                
-                # Limit to 5 chunks for regular queries
-                for i, doc in enumerate(rag_docs[:5], 1):
-                    metadata = doc.get('metadata', {})
-                    source = metadata.get('source', 'Unknown')
-                    doc_type = metadata.get('document_type', 'Document')
-                    year = metadata.get('year', 'Unknown')
-                    chunk_text = doc.get('text', '')[:500]  # Shorter excerpts for regular queries
-                    
-                    prompt_parts.extend([
-                        f"[Document {i}]",
-                        f"Source: {source}",
-                        f"Type: {doc_type} ({year})",
-                        f"Relevance Score: {1 - doc.get('distance', 1):.3f}" if 'distance' in doc else "",
-                        f"",
-                        f"Content Excerpt:",
-                        chunk_text,
-                        "...",
-                        ""
-                    ])
-        
-        # Special instructions for document summarization queries (if not already added above)
-        if is_document_summary_query and 'rag_documents' in financial_context and not any('DOCUMENT SUMMARIZATION TASK' in p for p in prompt_parts):
-            prompt_parts.extend([
-                "",
-                "=== DOCUMENT SUMMARIZATION TASK ===",
-                "The user has requested a summary and insights for a specific document from Tesla's Knowledge Base.",
-                "Your task is to:",
-                "1. Provide a comprehensive executive summary of the document",
-                "2. Identify and highlight key insights, themes, and important information",
-                "3. Extract key metrics, goals, achievements, or data points mentioned",
-                "4. Organize insights by topic/section if the document has multiple sections",
-                "5. Cite specific information from the document using the source filename",
-                "6. Provide actionable insights or recommendations based on the document content",
-                "",
-            ])
-        
-        # Phase 3: Add temporal context if available
-        if 'temporal_info' in financial_context:
-            temporal_info = financial_context['temporal_info']
-            temporal_context = self.rag_service.temporal_reasoning.build_temporal_prompt_context(
-                temporal_info,
-                financial_context.get('rag_documents', [])
-            )
-            if temporal_context:
-                prompt_parts.append(temporal_context)
-        
         prompt_parts.extend([
             "",
             "=== Your Task ===",
-            "Based on the financial data provided above" + (" and relevant documents" if 'rag_documents' in financial_context else "") + ":",
+            "Based on the financial data provided above:",
             "1. Answer the user's specific question with EXACT NUMBERS from the data above",
             "2. For VEHICLE FORECAST questions:",
             "   - Specify which model(s) the forecast is for",
@@ -1620,7 +1344,6 @@ Keep under 600 words total."""
             "8. Provide insights on trends and performance drivers",
             "9. Include actionable recommendations based on the analysis",
             "10. Cite specific data sources (e.g., 'According to Model 3 Multivariate Forecast' or 'Best Case Balance Sheet 2026')",
-            "11. " + ("MANDATORY: If 'RELEVANT DOCUMENTS FROM TESLA KNOWLEDGE BASE' section appears above, you MUST cite the source document(s) when using their information. Start your response with: 'According to the [YEAR] [DOCUMENT TYPE] Report ([Source filename])' or include inline citations like '([YEAR] 10-K Report).' Example: 'According to the 2024 10-K Report (10K Report 2024.pdf), Tesla's total revenue was...' If you use ANY information from those documents, citations are REQUIRED." if 'rag_documents' in financial_context else "When using information from Tesla Knowledge Base documents (SEC filings, reports), cite the source document (e.g., 'According to the 2024 10-K Report...')"),
             "",
             "Format your response clearly with:",
             "- Direct answer to the question with specific numbers",
@@ -1763,38 +1486,3 @@ The user asked to simulate {growth_pct*100:.0f}% revenue growth. Here are the EX
             ]
         
         return recommendations[:5]  # Return top 5 recommendations
-    
-    def _build_user_document_prompt(self, query: str) -> str:
-        """
-        Build a prompt for user-uploaded document queries
-        This prompt ONLY uses the document content provided in the query itself
-        
-        Args:
-            query: User query (already contains document excerpts from FRA endpoint)
-            
-        Returns:
-            Prompt string that instructs AI to ONLY use the provided document content
-        """
-        prompt_parts = [
-            "=== USER-UPLOADED DOCUMENT ANALYSIS ===",
-            "",
-            "CRITICAL INSTRUCTIONS:",
-            "1. You are analyzing a document that the user has uploaded (PDF, Excel, CSV, or Image)",
-            "2. You MUST base your response ONLY on the document excerpts provided below",
-            "3. DO NOT use any Tesla Knowledge Base documents, financial model forecasts, or external data",
-            "4. DO NOT reference Tesla's 10-K reports, Impact Reports, or any pre-existing Tesla documents",
-            "5. DO NOT use any financial model data (2025, 2026 forecasts, vehicle forecasts, etc.)",
-            "6. If the document doesn't contain the information needed to answer the question, say so explicitly",
-            "7. Answer based ONLY on what is in the uploaded document excerpts",
-            "",
-            "=== USER QUESTION ===",
-            query,
-            "",
-            "=== YOUR TASK ===",
-            "Provide a clear, accurate answer based ONLY on the document content provided above.",
-            "If information is missing, state that it's not available in the uploaded document.",
-            "Do not make assumptions or use knowledge from other sources.",
-            "",
-        ]
-        
-        return "\n".join(prompt_parts)
